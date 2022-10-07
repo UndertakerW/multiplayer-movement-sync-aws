@@ -2,7 +2,7 @@ const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 require('./patch.js');
 let send = undefined;
-const TABLE_NAME = "game-session-1"; // your dynamodb table name
+const TABLE_NAME = "game-session-2022-2"; // your dynamodb table name
 const FIRST_TO_JOIN_OP = "0";
 const REQUEST_START_OP = "1";
 const THROW_OP = "5";
@@ -102,6 +102,12 @@ exports.handler = (event, context, callback) => {
                      x: opposite(p1RandX),
                      z: opposite(p1RandZ)
                   };
+                  
+                  let enemyForward = {
+                     x: 1,
+                     y: 0,
+                     z: 0
+                  };
 
                   p1StartPos.y = 2;
                   p2StartPos.y = 2;
@@ -109,11 +115,13 @@ exports.handler = (event, context, callback) => {
                   //now that we have a 2nd player, also send PlayingOp status to kick off player 1
                   send(data.Items[0].player1, '{ "uuid": ' + data.Items[0].uuid + ', "opcode": ' +
                      opcodeStart + ', "velocity": ' + buildVelocityObject(p1StartPos) +
-                     ', "enemyVelocity": ' + buildVelocityObject(p2StartPos) + ', "player": "1" }');
+                     ', "enemyVelocity": ' + buildVelocityObject(p2StartPos) +
+                     ', "enemyForward": ' + enemyForward + ', "player": "1" }');
 
                   send(data.Items[0].player2, '{ "uuid": ' + data.Items[0].uuid + ', "opcode": ' +
                      opcodeStart + ', "velocity": ' + buildVelocityObject(p2StartPos) +
-                     ', "enemyVelocity": ' + buildVelocityObject(p1StartPos) + ', "player": "2" }');
+                     ', "enemyVelocity": ' + buildVelocityObject(p1StartPos) +
+                     ', "enemyForward": ' + enemyForward  + ', "player": "2" }');
                }
             });
 
@@ -163,6 +171,7 @@ exports.handler = (event, context, callback) => {
 
                      let posMsg = '{ "opcode": ' + OPPONENT_VELOCITY + ', "timestamp": ' + Date.now() +
                         ', "velocity": ' + buildVelocityObject(message.velocity) + ', "seq": ' + message.seq +
+                        ', "currentForward": ' + buildVelocityObject(message.currentForward) + 
                         ', "currentPos": ' + buildVelocityObject(message.currentPos) + ' }';
                      console.log(posMsg);
 
@@ -175,6 +184,7 @@ exports.handler = (event, context, callback) => {
                   console.log(message.velocity);
                   let posMsg = '{ "opcode": ' + OPPONENT_VELOCITY + ', "timestamp": ' + Date.now() +
                      ', "velocity": ' + buildVelocityObject(message.velocity) + ', "seq": ' + message.seq +
+                     ', "currentForward": ' + buildVelocityObject(message.currentForward) + 
                      ', "currentPos": ' + buildVelocityObject(message.currentPos) + ' }';
                   console.log(posMsg);
 
